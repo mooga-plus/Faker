@@ -50,11 +50,11 @@ class EntityPopulator
         $formatters = [];
         $class = $this->class;
         $table = $this->getTable($class);
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         $pk = $schema->primaryKey();
         $guessers = $populator->getGuessers() + ['ColumnTypeGuesser' => new ColumnTypeGuesser($populator->getGenerator())];
         $isForeignKey = function ($column) use ($table) {
-            foreach ($table->associations()->type('BelongsTo') as $assoc) {
+            foreach ($table->associations()->getByType('BelongsTo') as $assoc) {
                 if ($column == $assoc->foreignKey()) {
                     return true;
                 }
@@ -87,7 +87,7 @@ class EntityPopulator
         $modifiers = [];
         $table = $this->getTable($this->class);
 
-        $belongsTo = $table->associations()->type('BelongsTo');
+        $belongsTo = $table->associations()->getByType('BelongsTo');
         foreach ($belongsTo as $assoc) {
             $modifiers['belongsTo' . $assoc->name()] = function ($data, $insertedEntities) use ($assoc) {
                 $table = $assoc->target();
@@ -110,6 +110,7 @@ class EntityPopulator
                 }
 
                 $foreignKey = $foreignKeys[array_rand($foreignKeys)];
+                $primaryKey = $table->getPrimaryKey();
                 $data[$assoc->foreignKey()] = $foreignKey;
                 return $data;
             };
@@ -126,7 +127,7 @@ class EntityPopulator
     public function execute($class, $insertedEntities, $options = [])
     {
         $table = $this->getTable($class);
-        $entity = $table->newEntity();
+        $entity = $table->newEntity([]);
 
         foreach ($this->columnFormatters as $column => $format) {
             if (!is_null($format)) {
@@ -142,7 +143,7 @@ class EntityPopulator
             throw new \RuntimeException("Failed saving $class record");
         }
 
-        $pk = $table->primaryKey();
+        $pk = $table->getPrimaryKey();
         if (is_string($pk)) {
             return $entity->{$pk};
         }

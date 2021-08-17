@@ -17,9 +17,9 @@ class ColumnTypeGuesser
     public function guessFormat($column, $table)
     {
         $generator = $this->generator;
-        $schema = $table->schema();
+        $schema = $table->getSchema();
 
-        switch ($schema->columnType($column)) {
+        switch ($schema->getColumnType($column)) {
             case 'boolean':
                 return function () use ($generator) {
                     return $generator->boolean;
@@ -42,11 +42,7 @@ class ColumnTypeGuesser
                     return $generator->uuid();
                 };
             case 'string':
-                if (method_exists($schema, 'getColumn')) {
-                    $columnData = $schema->getColumn($column);
-                } else {
-                    $columnData = $schema->column($column);
-                }
+                $columnData = $schema->getColumn($column);
                 $length = $columnData['length'];
                 return function () use ($generator, $length) {
                     return $generator->text($length);
